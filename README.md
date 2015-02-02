@@ -7,7 +7,7 @@ You can only use this background mode if your app truly needs this information t
 
 More ABOUT BACKGROUND MODES:
 
-http://www.raywenderlich.com/29948/backgrounding-for-ios
+[http://www.raywenderlich.com/29948/backgrounding-for-ios](http://www.raywenderlich.com/29948/backgrounding-for-ios "http://www.raywenderlich.com/29948/backgrounding-for-ios")
 ===============
 
 Most of the solutions before iOS 7 work well because during that time the system does not 
