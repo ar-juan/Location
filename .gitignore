@@ -1,0 +1,6 @@
+*.xcuserstate
+*.xcuserdatad
+Breakpoints_v2.xcbkptlist
+Expressions.xcexplist
+.DS_Store
+*.xccheckout

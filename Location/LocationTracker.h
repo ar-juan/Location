@@ -12,12 +12,12 @@
 
 @interface LocationTracker : NSObject <CLLocationManagerDelegate>
 
-@property (nonatomic) CLLocationCoordinate2D myLastLocation;
+@property (nonatomic) CLLocationCoordinate2D myLastLocationCoordinate;
 @property (nonatomic) CLLocationAccuracy myLastLocationAccuracy;
 
 @property (strong,nonatomic) LocationShareModel * shareModel;
 
-@property (nonatomic) CLLocationCoordinate2D myLocation;
+@property (nonatomic) CLLocationCoordinate2D myLocationCoordinate;
 @property (nonatomic) CLLocationAccuracy myLocationAccuracy;
 
 + (CLLocationManager *)sharedLocationManager;

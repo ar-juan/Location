@@ -8,12 +8,14 @@
 
 #import "LocationAppDelegate.h"
 
+#define SEND_LOCATION_UPDATE_TO_SERVER_TIME_INTERVAL 60.0
+
 @implementation LocationAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     
-     UIAlertView * alert;
+    UIAlertView * alert;
     
     //We have to make sure that the Background App Refresh is enable for the Location updates to work in the background.
     if([[UIApplication sharedApplication] backgroundRefreshStatus] == UIBackgroundRefreshStatusDenied){
@@ -39,9 +41,8 @@
         self.locationTracker = [[LocationTracker alloc]init];
         [self.locationTracker startLocationTracking];
         
-        //Send the best location to server every 60 seconds
-        //You may adjust the time interval depends on the need of your app.
-        NSTimeInterval time = 60.0;
+        //Send the best location to server every SEND_LOCATION_UPDATE_TO_SERVER_TIME_INTERVAL seconds
+        NSTimeInterval time = SEND_LOCATION_UPDATE_TO_SERVER_TIME_INTERVAL;
         self.locationUpdateTimer =
         [NSTimer scheduledTimerWithTimeInterval:time
                                          target:self
@@ -57,6 +58,7 @@
     NSLog(@"updateLocation");
     
     [self.locationTracker updateLocationToServer];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"Sending update to server" object:nil];
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application
@@ -77,6 +79,10 @@
 
 - (void)applicationWillTerminate:(UIApplication *)application
 {
+    // stop everything
+    [self.locationUpdateTimer invalidate];
+    self.locationUpdateTimer = nil;
+    [self.locationTracker stopLocationTracking];
 }
 
 @end

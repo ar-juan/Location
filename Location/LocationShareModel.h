@@ -13,9 +13,9 @@
 @interface LocationShareModel : NSObject
 
 @property (nonatomic) NSTimer *timer;
-@property (nonatomic) NSTimer * delay10Seconds;
+@property (nonatomic) NSTimer * locationUpdateTimeoutTimer;
 @property (nonatomic) BackgroundTaskManager * bgTask;
-@property (nonatomic) NSMutableArray *myLocationArray;
+@property (nonatomic) NSMutableArray *myLocationArray; // Of NSDictonary
 
 +(id)sharedModel;
 

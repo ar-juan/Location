@@ -13,30 +13,34 @@
 #define ACCURACY @"theAccuracy"
 
 #define IS_OS_8_OR_LATER ([[[UIDevice currentDevice] systemVersion] floatValue] >= 8.0)
+#define ACCURACY_MAX_NUMBER_OF_METERS 2000
+#define UPDATE_LOCATION_TIME_INTERVAL 60.f
+// Define timeout for loctionmanager - how long it has to fetch location before being stopped
+#define UPDATE_LOCATION_FETCH_TIMEOUT 10.f
 
 @implementation LocationTracker
 
 + (CLLocationManager *)sharedLocationManager {
-	static CLLocationManager *_locationManager;
-	
-	@synchronized(self) {
-		if (_locationManager == nil) {
-			_locationManager = [[CLLocationManager alloc] init];
+    static CLLocationManager *_locationManager;
+    
+    @synchronized(self) {
+        if (_locationManager == nil) {
+            _locationManager = [[CLLocationManager alloc] init];
             _locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation;
-		}
-	}
-	return _locationManager;
+        }
+    }
+    return _locationManager;
 }
 
 - (id)init {
-	if (self==[super init]) {
+    if (self=[super init]) {
         //Get the share model and also initialize myLocationArray
         self.shareModel = [LocationShareModel sharedModel];
         self.shareModel.myLocationArray = [[NSMutableArray alloc]init];
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationEnterBackground) name:UIApplicationDidEnterBackgroundNotification object:nil];
-	}
-	return self;
+    }
+    return self;
 }
 
 -(void)applicationEnterBackground{
@@ -78,12 +82,12 @@
 
 - (void)startLocationTracking {
     NSLog(@"startLocationTracking");
-
-	if ([CLLocationManager locationServicesEnabled] == NO) {
+    
+    if ([CLLocationManager locationServicesEnabled] == NO) {
         NSLog(@"locationServicesEnabled false");
-		UIAlertView *servicesDisabledAlert = [[UIAlertView alloc] initWithTitle:@"Location Services Disabled" message:@"You currently have all location services for this device disabled" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-		[servicesDisabledAlert show];
-	} else {
+        UIAlertView *servicesDisabledAlert = [[UIAlertView alloc] initWithTitle:@"Location Services Disabled" message:@"You currently have all location services for this device disabled" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+        [servicesDisabledAlert show];
+    } else {
         CLAuthorizationStatus authorizationStatus= [CLLocationManager authorizationStatus];
         
         if(authorizationStatus == kCLAuthorizationStatusDenied || authorizationStatus == kCLAuthorizationStatusRestricted){
@@ -92,15 +96,15 @@
             NSLog(@"authorizationStatus authorized");
             CLLocationManager *locationManager = [LocationTracker sharedLocationManager];
             locationManager.delegate = self;
-            locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation;
+            locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation; // TODO: later +- TenMeters?
             locationManager.distanceFilter = kCLDistanceFilterNone;
             
             if(IS_OS_8_OR_LATER) {
-              [locationManager requestAlwaysAuthorization];
+                [locationManager requestAlwaysAuthorization];
             }
             [locationManager startUpdatingLocation];
         }
-	}
+    }
 }
 
 
@@ -112,8 +116,8 @@
         self.shareModel.timer = nil;
     }
     
-	CLLocationManager *locationManager = [LocationTracker sharedLocationManager];
-	[locationManager stopUpdatingLocation];
+    CLLocationManager *locationManager = [LocationTracker sharedLocationManager];
+    [locationManager stopUpdatingLocation];
 }
 
 #pragma mark - CLLocationManagerDelegate Methods
@@ -122,12 +126,13 @@
     
     NSLog(@"locationManager didUpdateLocations");
     
+    
     for(int i=0;i<locations.count;i++){
-        CLLocation * newLocation = [locations objectAtIndex:i];
-        CLLocationCoordinate2D theLocation = newLocation.coordinate;
-        CLLocationAccuracy theAccuracy = newLocation.horizontalAccuracy;
+        CLLocation * location = [locations objectAtIndex:i];
+        CLLocationCoordinate2D locationCoordinate = location.coordinate;
+        CLLocationAccuracy locationAccuracy = location.horizontalAccuracy;
         
-        NSTimeInterval locationAge = -[newLocation.timestamp timeIntervalSinceNow];
+        NSTimeInterval locationAge = -[location.timestamp timeIntervalSinceNow];
         
         if (locationAge > 30.0)
         {
@@ -135,20 +140,21 @@
         }
         
         //Select only valid location and also location with good accuracy
-        if(newLocation!=nil&&theAccuracy>0
-           &&theAccuracy<2000
-           &&(!(theLocation.latitude==0.0&&theLocation.longitude==0.0))){
+        if(location!=nil&&locationAccuracy>0
+           &&locationAccuracy<ACCURACY_MAX_NUMBER_OF_METERS
+           &&(!(locationCoordinate.latitude==0.0&&locationCoordinate.longitude==0.0))){
             
-            self.myLastLocation = theLocation;
-            self.myLastLocationAccuracy= theAccuracy;
+            self.myLastLocationCoordinate = locationCoordinate;
+            self.myLastLocationAccuracy= locationAccuracy;
             
+            // TODO: onderstaande beter buiten de loop?
             NSMutableDictionary * dict = [[NSMutableDictionary alloc]init];
-            [dict setObject:[NSNumber numberWithFloat:theLocation.latitude] forKey:@"latitude"];
-            [dict setObject:[NSNumber numberWithFloat:theLocation.longitude] forKey:@"longitude"];
-            [dict setObject:[NSNumber numberWithFloat:theAccuracy] forKey:@"theAccuracy"];
+            [dict setObject:[NSNumber numberWithFloat:locationCoordinate.latitude] forKey:LATITUDE];
+            [dict setObject:[NSNumber numberWithFloat:locationCoordinate.longitude] forKey:LONGITUDE];
+            [dict setObject:[NSNumber numberWithFloat:locationAccuracy] forKey:ACCURACY];
             
             //Add the vallid location with good accuracy into an array
-            //Every 1 minute, I will select the best location based on accuracy and send to server
+            //Every X minutes, I will select the best location based on accuracy and send to server
             [self.shareModel.myLocationArray addObject:dict];
         }
     }
@@ -161,39 +167,39 @@
     self.shareModel.bgTask = [BackgroundTaskManager sharedBackgroundTaskManager];
     [self.shareModel.bgTask beginNewBackgroundTask];
     
-    //Restart the locationMaanger after 1 minute
-    self.shareModel.timer = [NSTimer scheduledTimerWithTimeInterval:60 target:self
+    //Restart the locationManager after UPDATE_LOCATION_TIME_INTERVAL seconds
+    // Probably needed to stay alive if suspended - since ios 7 has a max of 3 minutes for NSTimers in the background
+    self.shareModel.timer = [NSTimer scheduledTimerWithTimeInterval:UPDATE_LOCATION_TIME_INTERVAL target:self
                                                            selector:@selector(restartLocationUpdates)
                                                            userInfo:nil
                                                             repeats:NO];
     
-    //Will only stop the locationManager after 10 seconds, so that we can get some accurate locations
-    //The location manager will only operate for 10 seconds to save battery
-    if (self.shareModel.delay10Seconds) {
-        [self.shareModel.delay10Seconds invalidate];
-        self.shareModel.delay10Seconds = nil;
+    // Will run the locationmanager for UPDATE_LOCATION_FETCH_TIMEOUT seconds. Not less so that
+    // it has enough time to get an accurate location. Not more so that we save the battery
+    if (self.shareModel.locationUpdateTimeoutTimer) {
+        [self.shareModel.locationUpdateTimeoutTimer invalidate];
+        self.shareModel.locationUpdateTimeoutTimer = nil;
     }
     
-    self.shareModel.delay10Seconds = [NSTimer scheduledTimerWithTimeInterval:10 target:self
-                                                    selector:@selector(stopLocationDelayBy10Seconds)
-                                                    userInfo:nil
-                                                     repeats:NO];
-
+    self.shareModel.locationUpdateTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval:UPDATE_LOCATION_FETCH_TIMEOUT target:self
+                                                                                selector:@selector(stopUpdatingLocationAfterTimeout:)
+                                                                                userInfo:nil
+                                                                                 repeats:NO];
+    NSLog(@"locationManager will stop updating after %f seconds", UPDATE_LOCATION_FETCH_TIMEOUT);
 }
 
 
 //Stop the locationManager
--(void)stopLocationDelayBy10Seconds{
+-(void)stopUpdatingLocationAfterTimeout:(NSTimer *)timer{
     CLLocationManager *locationManager = [LocationTracker sharedLocationManager];
     [locationManager stopUpdatingLocation];
-    
-    NSLog(@"locationManager stop Updating after 10 seconds");
+    NSLog(@"locationManager stopped updating after %f seconds", UPDATE_LOCATION_FETCH_TIMEOUT);
 }
 
 
 - (void)locationManager: (CLLocationManager *)manager didFailWithError: (NSError *)error
 {
-   // NSLog(@"locationManager error:%@",error);
+    // NSLog(@"locationManager error:%@",error);
     
     switch([error code])
     {
@@ -243,26 +249,41 @@
     if(self.shareModel.myLocationArray.count==0)
     {
         NSLog(@"Unable to get location, use the last known location");
-
-        self.myLocation=self.myLastLocation;
+        
+        self.myLocationCoordinate=self.myLastLocationCoordinate;
         self.myLocationAccuracy=self.myLastLocationAccuracy;
         
     }else{
         CLLocationCoordinate2D theBestLocation;
         theBestLocation.latitude =[[myBestLocation objectForKey:LATITUDE]floatValue];
         theBestLocation.longitude =[[myBestLocation objectForKey:LONGITUDE]floatValue];
-        self.myLocation=theBestLocation;
+        self.myLocationCoordinate=theBestLocation;
         self.myLocationAccuracy =[[myBestLocation objectForKey:ACCURACY]floatValue];
     }
     
-    NSLog(@"Send to Server: Latitude(%f) Longitude(%f) Accuracy(%f)",self.myLocation.latitude, self.myLocation.longitude,self.myLocationAccuracy);
+    NSLog(@"Send to Server: Latitude(%f) Longitude(%f) Accuracy(%f)",self.myLocationCoordinate.latitude, self.myLocationCoordinate.longitude,self.myLocationAccuracy);
     
     //TODO: Your code to send the self.myLocation and self.myLocationAccuracy to your server
-    
-    //After sending the location to the server successful, remember to clear the current array with the following code. It is to make sure that you clear up old location in the array and add the new locations from locationManager
-    [self.shareModel.myLocationArray removeAllObjects];
-    self.shareModel.myLocationArray = nil;
-    self.shareModel.myLocationArray = [[NSMutableArray alloc]init];
+    NSURL *url = [NSURL URLWithString:@"http://192.168.10.132:61710"];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    [request setHTTPMethod:@"POST"];
+    NSString * params = [NSString stringWithFormat:@"lat=%f&lng=%f&accuracy=%f", self.myLocationCoordinate.latitude, self.myLocationCoordinate.longitude, self.myLocationAccuracy];
+    [request setHTTPBody:[params dataUsingEncoding:NSUTF8StringEncoding]];
+    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration];
+    NSURLSessionDownloadTask *task;
+    task = [session downloadTaskWithRequest:request completionHandler:^(NSURL *localFile, NSURLResponse *response, NSError *error) {
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+        if ((([httpResponse statusCode]/100) == 2)) {
+            //After sending the location to the server successful, remember to clear the current array with the following code. It is to make sure that you clear up old location in the array and add the new locations from locationManager
+            [self.shareModel.myLocationArray removeAllObjects];
+            self.shareModel.myLocationArray = nil;
+            self.shareModel.myLocationArray = [[NSMutableArray alloc]init];
+        } else if (error) {
+            NSLog(@"%@", error.localizedDescription);
+        }
+    }];
+    [task resume];
 }
 
 
