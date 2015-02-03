@@ -25,6 +25,7 @@
 		5C9090C918B3A78800510153 /* LocationShareModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 5C9090C818B3A78800510153 /* LocationShareModel.m */; };
 		5C9090CC18B3A7FC00510153 /* BackgroundTaskManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 5C9090CB18B3A7FC00510153 /* BackgroundTaskManager.m */; };
 		5C9090CE18B3AB2100510153 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C9090CD18B3AB2100510153 /* CoreLocation.framework */; };
+		D6E47A6B1A81339500A62A33 /* LiveTrackManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D6E47A6A1A81339500A62A33 /* LiveTrackManager.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,6 +65,8 @@
 		5C9090CA18B3A7FC00510153 /* BackgroundTaskManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BackgroundTaskManager.h; sourceTree = "<group>"; };
 		5C9090CB18B3A7FC00510153 /* BackgroundTaskManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BackgroundTaskManager.m; sourceTree = "<group>"; };
 		5C9090CD18B3AB2100510153 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		D6E47A691A81339500A62A33 /* LiveTrackManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LiveTrackManager.h; sourceTree = "<group>"; };
+		D6E47A6A1A81339500A62A33 /* LiveTrackManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LiveTrackManager.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -127,6 +130,8 @@
 			children = (
 				5C90909E18B3A66A00510153 /* LocationAppDelegate.h */,
 				5C90909F18B3A66A00510153 /* LocationAppDelegate.m */,
+				D6E47A691A81339500A62A33 /* LiveTrackManager.h */,
+				D6E47A6A1A81339500A62A33 /* LiveTrackManager.m */,
 				5C9090A118B3A66A00510153 /* Main.storyboard */,
 				5C9090A418B3A66A00510153 /* LocationViewController.h */,
 				5C9090A518B3A66A00510153 /* LocationViewController.m */,
@@ -280,6 +285,7 @@
 				5C9090C618B3A75500510153 /* LocationTracker.m in Sources */,
 				5C9090A618B3A66A00510153 /* LocationViewController.m in Sources */,
 				5C9090C918B3A78800510153 /* LocationShareModel.m in Sources */,
+				D6E47A6B1A81339500A62A33 /* LiveTrackManager.m in Sources */,
 				5C9090CC18B3A7FC00510153 /* BackgroundTaskManager.m in Sources */,
 				5C9090A018B3A66A00510153 /* LocationAppDelegate.m in Sources */,
 			);
@@ -490,6 +496,7 @@
 				5C9090C018B3A66A00510153 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		5C9090C118B3A66A00510153 /* Build configuration list for PBXNativeTarget "LocationTests" */ = {
 			isa = XCConfigurationList;
@@ -498,6 +505,7 @@
 				5C9090C318B3A66A00510153 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -7,59 +7,15 @@
 //
 
 #import "LocationAppDelegate.h"
-
-#define SEND_LOCATION_UPDATE_TO_SERVER_TIME_INTERVAL 120.0
+#import "LiveTrackManager.h"
 
 @implementation LocationAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    [[UIDevice currentDevice] setBatteryMonitoringEnabled:YES];
-    
-    UIAlertView * alert;
-    
-    //We have to make sure that the Background App Refresh is enable for the Location updates to work in the background.
-    if([[UIApplication sharedApplication] backgroundRefreshStatus] == UIBackgroundRefreshStatusDenied){
-        
-        alert = [[UIAlertView alloc]initWithTitle:@""
-                                          message:@"The app doesn't work without the Background App Refresh enabled. To turn it on, go to Settings > General > Background App Refresh"
-                                         delegate:nil
-                                cancelButtonTitle:@"Ok"
-                                otherButtonTitles:nil, nil];
-        [alert show];
-        
-    }else if([[UIApplication sharedApplication] backgroundRefreshStatus] == UIBackgroundRefreshStatusRestricted){
-        
-        alert = [[UIAlertView alloc]initWithTitle:@""
-                                          message:@"The functions of this app are limited because the Background App Refresh is disable."
-                                         delegate:nil
-                                cancelButtonTitle:@"Ok"
-                                otherButtonTitles:nil, nil];
-        [alert show];
-        
-    } else{
-        
-        self.locationTracker = [[LocationTracker alloc]init];
-        [self.locationTracker startLocationTracking];
-        
-        //Send the best location to server every SEND_LOCATION_UPDATE_TO_SERVER_TIME_INTERVAL seconds
-        NSTimeInterval time = SEND_LOCATION_UPDATE_TO_SERVER_TIME_INTERVAL;
-        self.locationUpdateTimer =
-        [NSTimer scheduledTimerWithTimeInterval:time
-                                         target:self
-                                       selector:@selector(updateLocation)
-                                       userInfo:nil
-                                        repeats:YES];
-    }
-    
+    self.liveTrackManager = [LiveTrackManager sharedManager];
+    [self.liveTrackManager startTracking];
     return YES;
-}
-
--(void)updateLocation {
-    NSLog(@"updateLocation");
-    
-    [self.locationTracker updateLocationToServer];
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"Sending update to server" object:nil];
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application
@@ -81,9 +37,7 @@
 - (void)applicationWillTerminate:(UIApplication *)application
 {
     // stop everything
-    [self.locationUpdateTimer invalidate];
-    self.locationUpdateTimer = nil;
-    [self.locationTracker stopLocationTracking];
+    [self.liveTrackManager stopTracking];
 }
 
 @end

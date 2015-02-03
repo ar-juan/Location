@@ -7,12 +7,11 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "LocationTracker.h"
+#import "LiveTrackManager.h"
 
 @interface LocationAppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (strong, nonatomic) UIWindow *window;
-@property LocationTracker * locationTracker;
-@property (nonatomic) NSTimer* locationUpdateTimer;
+@property LiveTrackManager *liveTrackManager;
 
 @end

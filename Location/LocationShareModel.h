@@ -16,6 +16,7 @@
 @property (nonatomic) NSTimer * locationUpdateTimeoutTimer;
 @property (nonatomic) BackgroundTaskManager * bgTask;
 @property (nonatomic) NSMutableArray *myLocationArray; // Of NSDictonary
+@property (nonatomic) NSTimer* locationUpdateTimer;
 
 +(id)sharedModel;
 
