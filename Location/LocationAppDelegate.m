@@ -8,12 +8,13 @@
 
 #import "LocationAppDelegate.h"
 
-#define SEND_LOCATION_UPDATE_TO_SERVER_TIME_INTERVAL 60.0
+#define SEND_LOCATION_UPDATE_TO_SERVER_TIME_INTERVAL 120.0
 
 @implementation LocationAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    [[UIDevice currentDevice] setBatteryMonitoringEnabled:YES];
     
     UIAlertView * alert;
     

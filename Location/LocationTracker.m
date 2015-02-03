@@ -14,7 +14,7 @@
 
 #define IS_OS_8_OR_LATER ([[[UIDevice currentDevice] systemVersion] floatValue] >= 8.0)
 #define ACCURACY_MAX_NUMBER_OF_METERS 2000
-#define UPDATE_LOCATION_TIME_INTERVAL 60.f
+#define UPDATE_LOCATION_TIME_INTERVAL 120.f
 // Define timeout for loctionmanager - how long it has to fetch location before being stopped
 #define UPDATE_LOCATION_FETCH_TIMEOUT 10.f
 
@@ -33,7 +33,8 @@
 }
 
 - (id)init {
-    if (self=[super init]) {
+    self=[super init];
+    if (self) {
         //Get the share model and also initialize myLocationArray
         self.shareModel = [LocationShareModel sharedModel];
         self.shareModel.myLocationArray = [[NSMutableArray alloc]init];
@@ -194,6 +195,9 @@
     CLLocationManager *locationManager = [LocationTracker sharedLocationManager];
     [locationManager stopUpdatingLocation];
     NSLog(@"locationManager stopped updating after %f seconds", UPDATE_LOCATION_FETCH_TIMEOUT);
+    
+    // TODO: NOW, get the best one and save to core data?
+    // Why do it in another process?
 }
 
 
@@ -267,7 +271,8 @@
     NSURL *url = [NSURL URLWithString:@"http://192.168.10.132:61710"];
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
     [request setHTTPMethod:@"POST"];
-    NSString * params = [NSString stringWithFormat:@"lat=%f&lng=%f&accuracy=%f", self.myLocationCoordinate.latitude, self.myLocationCoordinate.longitude, self.myLocationAccuracy];
+    int batteryLevel = (int)([[UIDevice currentDevice] batteryLevel] * 100);
+    NSString * params = [NSString stringWithFormat:@"lat=%f&lng=%f&accuracy=%f&batterylevel=%d", self.myLocationCoordinate.latitude, self.myLocationCoordinate.longitude, self.myLocationAccuracy, batteryLevel];
     [request setHTTPBody:[params dataUsingEncoding:NSUTF8StringEncoding]];
     NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration ephemeralSessionConfiguration];
     NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration];
